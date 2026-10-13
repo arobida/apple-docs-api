@@ -138,7 +138,7 @@ function blocks(items, refs) {
         if (headers.length) {
           out += '\n| ' + headers.join(' | ') + ' |\n';
           out += '| ' + headers.map(() => '---').join(' | ') + ' |\n';
-          for (const row of it.rows || []) out += '| ' + row.map((c) => String(c)).join(' | ') + '|\n';
+          for (const row of it.rows || []) out += '| ' + row.map((c) => String(c)).join(' | ') + ' |\n';
           out += '\n';
         }
         break;
