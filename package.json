@@ -5,15 +5,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "cf dev",
+    "start": "cf dev",
+    "build": "cf build",
+    "deploy": "cf deploy",
     "tail": "wrangler tail",
-    "cf-typegen": "wrangler types",
+    "cf-typegen": "cf workers types",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261014.1",
+    "cf": "^1.0.0-beta.16",
     "typescript": "^5.9.3",
     "wrangler": "^4.151.0"
   }

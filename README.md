@@ -37,22 +37,26 @@ curl 'https://apple-docs-api.afrobida.workers.dev/search?q=SwiftUI%20Scene'
 
 ## Development
 
-Requires [Node.js](https://nodejs.org/) 22+ and a Cloudflare account.
+Requires [Node.js](https://nodejs.org/) 22.18+ and a Cloudflare account. This project uses
+[cf](https://developers.cloudflare.com/cf/), Cloudflare's CLI, with typed configuration in
+`cloudflare.config.ts`.
 
 ```bash
 npm install
-npm run dev        # local dev server (wrangler dev)
+npm run dev        # local dev server (cf dev)
+npm run build      # build the worker bundle (cf build)
 npm run typecheck  # strict TypeScript check (tsc --noEmit)
-npm run deploy     # deploy to Cloudflare
-npm run tail       # stream live logs
+npm run deploy     # deploy to Cloudflare (cf deploy)
+npm run tail       # stream live logs (wrangler tail)
 ```
 
 The worker source is TypeScript (`src/index.ts`). Runtime types come from
-`@cloudflare/workers-types` (referenced in `tsconfig.json`). For types matched exactly to
-the configured compatibility date, flags, and bindings, generate them with Wrangler:
+`@cloudflare/workers-types`; `cf build`/`cf dev` also regenerate `.cloudflare/types/`
+from `cloudflare.config.ts` (config-inferred bindings and module types, gitignored). To
+write them on demand:
 
 ```bash
-npm run cf-typegen # wrangler types -> worker-configuration.d.ts
+npm run cf-typegen # cf workers types -> .cloudflare/types/
 ```
 
 The worker has no bindings — it talks directly to `developer.apple.com` from the edge.

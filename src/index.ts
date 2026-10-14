@@ -15,8 +15,8 @@ const CORS: Record<string, string> = {
 
 // ---------- types ----------
 
-// Worker bindings (none today). Add vars, KV namespaces, etc. here as the worker grows,
-// or run `npm run cf-typegen` to generate config-matched types from wrangler.toml.
+// Worker bindings (none today). Add vars, KV namespaces, etc. here as the worker grows —
+// bindings are declared in cloudflare.config.ts and types regenerate on `cf build`.
 interface Env {}
 
 interface AppleRef {

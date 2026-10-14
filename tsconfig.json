@@ -5,19 +5,21 @@
 		/* Specify a set of bundled library declaration files that describe the target runtime environment. */
 		"lib": ["es2021"],
 		/* Specify what module code is generated. */
-		"module": "es2022",
+		"module": "esnext",
 		/* Specify how TypeScript looks up a file from a given module specifier. */
 		"moduleResolution": "bundler",
 
 		/* Enable importing .json files. */
 		"resolveJsonModule": true,
+		/* cloudflare.config.ts imports the worker entrypoint by its .ts path. */
+		"allowImportingTsExtensions": true,
 
 		/* Allow JavaScript files to be a part of the program. */
 		"allowJs": true,
 		/* Disable type checking for JavaScript files. */
 		"checkJs": false,
 
-		/* Wrangler bundles the Worker — tsc is only used for type-checking. */
+		/* cf/Vite bundle the Worker — tsc is only used for type-checking. */
 		"noEmit": true,
 		"isolatedModules": true,
 
@@ -29,11 +31,9 @@
 		/* Skip type checking all .d.ts files. */
 		"skipLibCheck": true,
 
-		/* Cloudflare Workers runtime types. For types matched exactly to your
-		   compatibility date/flags/bindings, run `npm run cf-typegen` (wrangler types)
-		   and reference "./worker-configuration.d.ts" here instead. */
+		/* Cloudflare Workers runtime types. */
 		"types": ["@cloudflare/workers-types"]
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "cloudflare.config.ts", ".cloudflare/types"],
 	"exclude": ["node_modules", "dist"]
 }
