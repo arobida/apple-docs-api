@@ -17,6 +17,29 @@ Apple's own documentation search (the same API developer.apple.com uses).
 | `GET /search?q={query}` | Search Apple docs; add `&type=sample` for sample code |
 | `GET /openapi.json` | OpenAPI 3.0 spec |
 | `GET /health` | Health check |
+| `POST /mcp` | MCP server — tools for AI agents (see below) |
+
+## MCP server (for AI agents)
+
+The worker speaks MCP at `/mcp` — the current **stateless** revision of the spec
+(`2026-07-28`): no session handshake, each request carries its protocol version in
+`_meta` and mirrors the method in `Mcp-Method` / `Mcp-Name` headers. Clients on older
+revisions are served on the same route via automatic legacy fallback (streamable HTTP
++ SSE).
+
+Point any MCP client at:
+
+```
+https://apple-docs-api.afrobida.workers.dev/mcp
+```
+
+Tools exposed:
+
+| Tool | Description |
+| --- | --- |
+| `search_docs` | Search Apple's docs index; returns paths to pass to `get_doc` |
+| `get_doc` | Fetch a doc page as Markdown (default), structured JSON, or raw Apple JSON — accepts a path or full Apple URL |
+| `api_info` | Describe the service and its plain-HTTP endpoints |
 
 ### Examples
 
@@ -60,6 +83,9 @@ npm run cf-typegen # cf workers types -> .cloudflare/types/
 ```
 
 The worker has no bindings — it talks directly to `developer.apple.com` from the edge.
+The MCP endpoint (`src/mcp.ts`) is built on `@modelcontextprotocol/server` v2 and the
+Cloudflare `agents` SDK (`createMcpHandler`), which is why `cloudflare.config.ts` sets
+the `nodejs_compat` compatibility flag.
 
 ## How it works
 

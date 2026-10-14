@@ -1,11 +1,13 @@
 // Apple Developer Docs API — Cloudflare Worker
 // Agent-friendly HTTP API over Apple's official developer documentation JSON feed.
 
+import { handleMcp } from './mcp.ts';
+
 const DATA_BASE = 'https://developer.apple.com/tutorials/data/';
 const SITE_BASE = 'https://developer.apple.com/';
 const CACHE_TTL = 3600;
 
-const PATH_RE = /^(documentation|tutorials|videos|samplecode|technotes|articles|downloads|release-notes)\//;
+export const PATH_RE = /^(documentation|tutorials|videos|samplecode|technotes|articles|downloads|release-notes)\//;
 
 const CORS: Record<string, string> = {
   'access-control-allow-origin': '*',
@@ -257,7 +259,7 @@ function resolveSection(sec: any, refs: References): DocSection {
   return { title: sec.title || '', items };
 }
 
-function transform(data: any, path: string): DocModel {
+export function transform(data: any, path: string): DocModel {
   const refs: References = data.references || {};
   const meta = data.metadata || {};
 
@@ -321,7 +323,7 @@ function transform(data: any, path: string): DocModel {
   return doc;
 }
 
-function toMarkdown(doc: DocModel): string {
+export function toMarkdown(doc: DocModel): string {
   let m = '# ' + doc.title + '\n\n';
   if (doc.roleHeading) m += '_Role: ' + doc.roleHeading + '_\n\n';
   const avail = (doc.availability || []).filter((p) => !p.unavailable);
@@ -368,7 +370,7 @@ function toMarkdown(doc: DocModel): string {
 
 // ---------- upstream fetching ----------
 
-async function fetchAppleDoc(path: string): Promise<FetchDocResult> {
+export async function fetchAppleDoc(path: string): Promise<FetchDocResult> {
   const candidates = [path];
   const lower = path.toLowerCase();
   if (lower !== path) candidates.push(lower);
@@ -403,7 +405,7 @@ const SAFARI_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15';
 const KIND_TYPES: Record<string, string> = { article: 'documentation-article', tutorial: 'documentation-tutorial', sampleCode: 'sample-code' };
 
-async function searchDocs(q: string, scope: string): Promise<SearchOutcome> {
+export async function searchDocs(q: string, scope: string): Promise<SearchOutcome> {
   const searchScope =
     scope === 'sample'
       ? { kind: 'documentationRole', value: 'sampleCode' }
@@ -534,6 +536,11 @@ function serviceIndex(origin: string) {
       },
       'GET /openapi.json': 'OpenAPI 3.0 spec for this API',
       'GET /health': 'Health check',
+      'POST /mcp': {
+        description:
+          'Model Context Protocol endpoint (stateless MCP, spec 2026-07-28, with legacy streamable-HTTP fallback). Tools: search_docs, get_doc, api_info.',
+        example: 'point any MCP client at ' + origin + '/mcp',
+      },
     },
     response_notes: {
       json: 'Structured fields: title, abstract, declarations, parameters, returns, availability, discussion (markdown), topicSections/relationshipsSections/seeAlsoSections with resolvable paths.',
@@ -615,7 +622,7 @@ function openapiSpec(origin: string) {
 
 // ---------- router ----------
 
-function extractPathFromAppleUrl(u: string | null | undefined): string | null {
+export function extractPathFromAppleUrl(u: string | null | undefined): string | null {
   const m = /^https?:\/\/developer\.apple\.com\/([^\s?#]+)/i.exec(u || '');
   return m ? m[1].replace(/\/+$/, '') : null;
 }
@@ -744,6 +751,11 @@ const worker: ExportedHandler<Env> = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // MCP endpoint — the handler manages its own methods/CORS (POST + OPTIONS).
+    if (url.pathname === '/mcp') {
+      return handleMcp(request, env, ctx);
+    }
+
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });
     }
@@ -772,7 +784,7 @@ const worker: ExportedHandler<Env> = {
     return json(
       {
         error: 'not_found',
-        available_endpoints: ['/', '/doc/{path}', '/doc?url=', '/search?q=', '/openapi.json', '/health'],
+        available_endpoints: ['/', '/doc/{path}', '/doc?url=', '/search?q=', '/openapi.json', '/health', '/mcp (MCP)'],
       },
       404
     );
